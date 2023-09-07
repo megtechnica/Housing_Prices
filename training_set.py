@@ -114,3 +114,127 @@ fig2.update_layout(
 
 fig1.show()
 fig2.show()
+
+
+# zoning impact on sale price
+zoning_prices = df.groupby('MSZoning')['SalePrice'].mean()
+fig3 = px.bar(x=zoning_prices.index, y=zoning_prices.values, title='Average Sale Price by Zoning',
+              color_discrete_sequence=['purple', 'green'], text=zoning_prices.values,
+              template='plotly_dark')
+
+fig3.update_traces(texttemplate='$%{text:,.0f}', textposition='outside')
+fig3.update_yaxes(title='Sale Price', tickprefix='$', tickformat=',')
+fig3.update_xaxes(title='Zoning')
+fig3.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
+
+fig3.show()
+
+# street and alley access types effect on sale price
+street_prices = df.groupby('Street')['SalePrice'].mean()
+alley_prices = df.groupby('Alley')['SalePrice'].mean()
+
+# Street Prices
+colors_street = np.where(street_prices.index == 'Pave', 'purple', 'green')
+fig5 = px.bar(x=street_prices.index, y=street_prices.values, title='Average Sale Price by Street Type',
+              template='plotly_dark', text=street_prices.values,
+              color=colors_street, color_discrete_sequence=['purple', 'green'])
+
+fig5.update_traces(texttemplate='$%{text:,.0f}', textposition='outside')
+fig5.update_yaxes(title='Sale Price', tickprefix='$', tickformat=',')
+fig5.update_xaxes(title='Street Type')
+fig5.update_layout(showlegend=False)
+
+# Alley Prices
+colors_alley = np.where(alley_prices.index == 'Pave', 'purple', 'green')
+fig6 = px.bar(x=alley_prices.index, y=alley_prices.values, title='Average Sale Price by Alley Type',
+              template='plotly_dark', text=alley_prices.values,
+              color=colors_alley, color_discrete_sequence=['purple', 'green'])
+
+fig6.update_traces(texttemplate='$%{text:,.0f}', textposition='outside')
+fig6.update_yaxes(title='Sale Price', tickprefix='$', tickformat=',')
+fig6.update_xaxes(title='Alley Type')
+fig6.update_layout(showlegend=False)
+
+fig5.show()
+fig6.show()
+
+# 4. average sale price by property shape
+colors = px.colors.qualitative.Plotly
+
+shape_prices = df.groupby('LotShape')['SalePrice'].mean()
+contour_prices = df.groupby('LandContour')['SalePrice'].mean()
+# Shape Prices
+fig7 = px.bar(x=shape_prices.index, y=shape_prices.values, title='Average Sale Price by Property Shape',
+              template='plotly_dark', text=shape_prices.values)
+
+fig7.update_traces(marker_color=colors, texttemplate='$%{text:,.0f}', textposition='outside')
+fig7.update_yaxes(title='Sale Price', tickprefix='$', tickformat=',')
+fig7.update_xaxes(title='Property Shape')
+fig7.update_layout(showlegend=False)
+
+# Contour Prices
+fig8 = px.bar(x=contour_prices.index, y=contour_prices.values, title='Average Sale Price by Property Contour',
+              template='plotly_dark', text=contour_prices.values)
+
+fig8.update_traces(marker_color=colors, texttemplate='$%{text:,.0f}', textposition='outside')
+fig8.update_yaxes(title='Sale Price', tickprefix='$', tickformat=',')
+fig8.update_xaxes(title='Property Contour')
+fig8.update_layout(showlegend=False)
+
+fig7.show()
+fig8.show()
+
+# calculate property age
+df['PropertyAge'] = df['YrSold'] - df['YearBuilt']
+
+# Calculate Correlation between Property Age and Sale Price
+age_price_corr = df['PropertyAge'].corr(df['SalePrice'])
+print(f'Correlation between Property Age and Sale Price: {age_price_corr}')
+
+# Create a scatter plot to visualize the relationship between Property Age and Sale Price
+fig9 = px.scatter(df, x='PropertyAge', y='SalePrice', title='Property Age vs Sale Price', color='PropertyAge', color_continuous_scale=px.colors.sequential.Purp)
+
+fig9.update_layout(plot_bgcolor='rgb(30,30,30)', paper_bgcolor='rgb(30,30,30)', font=dict(color='white'))
+
+fig9.show()
+
+# 6. Calculate Correlation between Living Area and Sale Price
+living_area_price_corr = df['GrLivArea'].corr(df['SalePrice'])
+print(f'Correlation between Living Area (above grade) and Sale Price: {living_area_price_corr}')
+
+# Create a scatter plot to visualize the relationship between Living Area and Sale Price
+fig10 = px.scatter(df, x='GrLivArea', y='SalePrice', title='Living Area (above grade) vs Sale Price', color='GrLivArea', color_continuous_scale=px.colors.sequential.Purp)
+
+fig10.update_layout(plot_bgcolor='rgb(30,30,30)', paper_bgcolor='rgb(30,30,30)', font=dict(color='white'))
+
+fig10.show()
+
+# 7. Box plot of price over the years
+yearly_avg_sale_price = df.groupby('YrSold')['SalePrice'].mean()
+
+fig13 = px.box(df, x='YrSold', y='SalePrice', title='Sale Price Trends Over the Years',
+               points=False, color_discrete_sequence=['green'])
+
+fig13.add_trace(px.line(x=yearly_avg_sale_price.index, y=yearly_avg_sale_price.values).data[0])
+
+fig13.update_traces(line=dict(color='purple', width=4), selector=dict(type='scatter', mode='lines'))
+
+for year, avg_price in yearly_avg_sale_price.items():
+    fig13.add_annotation(
+        x=year,
+        y=avg_price,
+        text=f"{avg_price:,.0f}",
+        font=dict(color='white'),
+        showarrow=False,
+        bgcolor='rgba(128, 0, 128, 0.6)'
+    )
+
+fig13.update_layout(
+    plot_bgcolor='rgb(30,30,30)',
+    paper_bgcolor='rgb(30,30,30)',
+    font=dict(color='white'),
+    xaxis_title='Year Sold',
+    yaxis_title='Sale Price'
+)
+
+fig13.show()
